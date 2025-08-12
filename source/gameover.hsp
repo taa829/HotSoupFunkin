@@ -1,0 +1,44 @@
+#module
+musicflag = 0
+continuedur = 0
+#deffunc gameoverinit
+    stopallsound
+    musicflag = 0
+    continuedur = 0
+    mcipause "inst"
+    mcipause "voices"    
+    playsound 4
+    deadbfinit "assets/images/characters/dead_bf.txt","assets/characters/dead_bf_data.txt","assets/images/characters/dead_bf.png"
+    deadbfplayanim "firstDeath"
+    return
+
+#deffunc gameoverupdate int camx,int camy
+    stick keys
+    color 255,255,255    
+    deadbfupdate camx,camy
+    if (musicflag = 0 & deadbfplaying() = 0){
+	     playsound 5
+	     musicflag = 1
+	}
+	if (keys&32) {
+		if (continuedur = 0) {
+			deadbfplayanim "deathConfirm"
+		    stopsound 5
+		    playsound 6
+		    continuedur = 300
+		}
+	}
+	if (continuedur > 0) {
+		continuedur = continuedur - 1
+		if (continuedur <= 0) {
+			stopallsound
+			playinit
+			playsong
+		}
+	}
+	else {
+		if (deadbfplaying() = 0 & musicflag = 1) : deadbfplayanim "deathLoop"
+	}
+    return
+
+#global

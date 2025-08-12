@@ -1,0 +1,98 @@
+#module
+dadcurframe = 0
+dadcuranim = 0
+dadatlas = 0
+dadelapsed = 0.0
+
+daddur = 0
+dadstate = ""
+
+daddata = ""
+dadanimx = 0
+dadanimy = 0
+
+dadflip = 0
+dadx = 0
+dady = 0
+dadscale = 0
+dadcamx = 0
+dadcamy = 0
+
+dadvalid = 0
+
+#deffunc dadinit str atlaspath,str datapath,str imgpath
+    sdim daddata,0
+    dadvalid = 0
+    if (existfile(datapath) = 0) {
+	    dadvalid = 0
+	    return
+	}
+	else {
+		dadvalid = 1
+	}
+    notesel buf
+    noteload atlaspath 
+    split buf,"\n",dadatlas       
+    loadchar imgpath,4
+    notesel daddata
+    noteload datapath
+    dadstate = ""
+    dadanimx = 0
+    dadanimy = 0
+    dadx = readcharoffsetx(daddata)
+    dady = readcharoffsety(daddata)
+    dadscale = readcharscale(daddata)
+    dadcamx = readcharcamx(daddata)
+    dadcamy = readcharcamy(daddata)
+    dadflip = readcharflip(daddata)
+    return
+
+#deffunc dadupdate int camx,int camy
+    if (dadvalid = 0) : return
+    if double(dadelapsed) > double(0.01) & dadcurframe < (length(dadcuranim) - 1) {
+	    dadcurframe = dadcurframe + 1
+	    dadelapsed = 0.0
+	}
+    readflush 8
+    x = readx(dadatlas(int(dadcuranim(dadcurframe))))
+    y = ready(dadatlas(int(dadcuranim(dadcurframe))))
+    w = readw(dadatlas(int(dadcuranim(dadcurframe))))
+    h = readh(dadatlas(int(dadcuranim(dadcurframe))))
+    pivx = readpivotx(dadatlas(int(dadcuranim(dadcurframe))))
+    pivy = readpivoty(dadatlas(int(dadcuranim(dadcurframe))))
+    if (dadflip = 0) : drawcharwithpivot 4,x,y,w,h,dadx + dadanimx,dady + dadanimy,double(w) * double(dadscale),double(h) * double(dadscale),camx,camy,pivx,pivy : else : drawcharwithpivot 4,x,y,w,h,dadx + dadanimx,dady + dadanimy,double(w) * double(dadscale * -1),double(h) * double(dadscale),camx,camy,pivx,pivy
+    dadelapsed = double(dadelapsed) + double(0.0025)
+    daddur = clampint(daddur + 1,0,60)
+    return
+
+#deffunc dadplayanim str anim
+    if (dadstate != anim) {
+	    if (existcharanim(daddata,anim) = 0) : return
+	    dadstate = anim
+	    sdim dadcuranim,0
+	    readcharanim daddata,anim,dadcuranim
+	    dadanimx = int(double(readcharanimationx(daddata,anim)) * double(dadscale))
+	    dadanimy = int(double(readcharanimationy(daddata,anim)) * double(dadscale)) 
+	    dadstate = anim
+	}
+	dadcurframe = 0
+	daddur = 0	
+    return
+
+#defcfunc dadplaying
+    if dadcurframe < (length(dadcuranim) - 1) : return 1
+    return 0
+
+#defcfunc dadduration
+    return daddur
+
+#defcfunc dadanimstate
+    return dadstate
+
+#defcfunc dadcamerax
+    return dadcamx
+
+#defcfunc dadcameray
+    return dadcamy    
+   
+#global

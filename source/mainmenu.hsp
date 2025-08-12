@@ -1,0 +1,114 @@
+#module
+menusel = 0
+menustate = 0
+
+songlist = 0
+songpage = 0
+
+#deffunc mainmenuinit
+    menusel = 0
+    menustate = 0
+    songpage = 0
+    return
+
+#deffunc mainmenuupdate    
+    color 55,55,165
+    boxf
+    color 0,0,0
+	boxf 100,50,540,310	
+	if (menustate = 0) : menustateupdate
+	if (menustate = 1) : songbrowserstateupdate
+    return
+
+#deffunc menustateupdate
+    stick keys
+    color 255,255,255
+    font "",25
+    drawtxt "<HSFUNKIN MAIN MENU>",100,50
+	if (menusel = 0) : drawtxt ">PLAY SONG",100,70 : else : drawtxt "-PLAY SONG",100,70
+	if (getplayconf("dfjkmode") = 0) {
+		if (menusel = 1) : drawtxt ">CONTROL TYPE: WASD",100,90 : else : drawtxt "-CONTROL TYPE: WASD",100,90
+	}
+	else {
+		if (menusel = 1) : drawtxt ">CONTROL TYPE: DFJK",100,90 : else : drawtxt "-CONTROL TYPE: DFJK",100,90
+	}
+	if (menusel = 2) : drawtxt ">EXIT",100,110 : else : drawtxt "-EXIT",100,110
+
+	if (keys&2) {
+		playsound 0
+		menusel = clampint(menusel - 1,0,2)
+	}
+	if (keys&8) {
+		playsound 0
+		menusel = clampint(menusel + 1,0,2)
+	}
+	if (keys&32) {
+		playsound 0
+		if (menusel = 0) {
+			menustate = 1
+			songbrowserinit
+			await 10
+		}
+		if (menusel = 1) {
+			if (getplayconf("dfjkmode") = 1) : setplayconf "dfjkmode",0 : else : setplayconf "dfjkmode",1
+		}
+		if (menusel = 2) {
+			await 500
+			end
+		}
+	}	
+    return
+
+#deffunc songbrowserinit
+    notesel buf
+    noteload "assets/songs/index.txt"
+    split buf,"\n",songlist
+    return
+
+#deffunc songbrowserstateupdate
+    stick keys
+    color 255,255,255
+    sysfont 0
+    drawtxt "<SONG BROWSER> [UP/DN:SELECT SONG] [L/R:MOVE PAGE]",100,50
+    drawtxt "PAGE:<" + (songpage + 1) + "/3>",100,290
+    if (songpage = 0) {
+	    if (menusel = 0) : drawtxt ">BACK",100,70 : else : drawtxt "-BACK",100,70
+	}
+    rep = 1
+    repeat length(songlist)
+        if (cnt < ((songpage + 1) * 10) & cnt >= ((songpage) * 10)) {
+	        if (menusel = (rep + (songpage * 10))) : drawtxt ">" + songlist(cnt),100,70 + (20 * rep) : else : drawtxt "-" + songlist(cnt),100,70 + (20 * rep)
+	        rep = rep + 1
+	    }        
+    loop
+	if (keys&2) {
+		playsound 0
+		menusel = clampint(menusel - 1,0,length(songlist))
+	}
+	if (keys&8) {
+		playsound 0
+		menusel = clampint(menusel + 1,0,length(songlist))
+	}
+	if (keys&1) {
+		playsound 0
+		songpage = clampint(songpage - 1,0,2)
+	}
+	if (keys&4) {
+		playsound 0
+		songpage = clampint(songpage + 1,0,2)
+	}
+	if (keys&32) {
+		playsound 0
+		if (menusel = 0) {			
+			menustate = 0
+		}
+		if (menusel > 0) {
+			playload "assets/songs/chart/" + songlist(menusel - 1) + ".txt"
+			playinit
+			playsong
+			setscene 1
+		}
+	}	
+    return    
+
+#global

@@ -1,0 +1,332 @@
+#module
+camx = 0
+camy = 0
+
+camoffsetx = 0
+camoffsety = 0
+
+score = 0
+totalscore = 0
+miss = 0
+health = 50
+combo = 0
+
+pause = 0
+pausemenusel = 0
+
+autoplay = 0
+debugmode = 0
+dfjkmode = 0
+
+pretime = 0
+curtime = 0
+
+#defcfunc getplayconf str key
+    if (key = "autoplay") : return autoplay
+    if (key = "dfjkmode") : return dfjkmode
+    return 0
+
+#deffunc setplayconf str key,int val
+    if (key = "autoplay") : autoplay = val
+    if (key = "dfjkmode") : dfjkmode = val
+    return
+
+#deffunc playload str songpath 
+    condinit
+    loadsong songpath
+    return
+
+#deffunc playinit 
+    mciclose "inst"
+    mciclose "voices"
+    mciload "assets/songs/pcm/" + getsongname() + "_Inst.wav","inst"
+    mciload "assets/songs/pcm/" + getsongname() + "_Voices.wav","voices"
+    loadchar "assets/images/stages/" + getstage() + ".png",6
+    bfinit "assets/images/characters/" + getp1char() + ".txt","assets/characters/" + getp1char() + "_data.txt","assets/images/characters/" + getp1char() + ".png"
+    gfinit "assets/images/characters/" + getgfchar() + ".txt","assets/characters/" + getgfchar() + "_data.txt","assets/images/characters/" + getgfchar() + ".png"
+    dadinit "assets/images/characters/" + getp2char() + ".txt","assets/characters/" + getp2char() + "_data.txt","assets/images/characters/" + getp2char() + ".png"
+    
+    readsection 0
+    setcondbpm getsongbpm()
+
+    hudinit
+    noteinit
+    if (dfjkmode = 0) : setnotebind 65,83,87,68 : else : setnotebind 68,70,74,75
+    setscrollspd getscrollspd()  
+
+    score = 0
+    totalscore = 0
+    miss = 0
+    health = 50
+    combo = 0
+
+    pause = 0
+    pausemenusel = 0
+
+    autoplay = 0
+
+    mciseek "inst",0
+    mciseek "voices",0
+    return
+
+#deffunc playsong  
+    pretime = (60.0 / double(condtempo())) * -6000.0
+    bfplayanim "idle"
+    dadplayanim "idle"
+    return
+
+#deffunc playupdate   
+    if (ismusthit()=1 | health <= 0) {
+	    camx = lerp(camx,bfcamerax() + camoffsetx,0.02)
+        camy = lerp(camy,bfcameray() + camoffsety,0.02)
+	}
+	else {
+		camx = lerp(camx,dadcamerax() + camoffsetx,0.02)
+        camy = lerp(camy,dadcameray() + camoffsety,0.02)
+	}
+
+    if (health <= 0) {
+	    gameoverupdate camx,camy
+	    return
+	}
+    
+    setautoplay autoplay
+    drawchar 6,0,0,640,360,0,0,960,540,camx,camy
+    gfupdate camx,camy
+    dadupdate camx,camy
+    bfupdate camx,camy    
+    if (((chkkey(getnotebind(4)) = 0 & chkkey(getnotebind(5)) = 0 & chkkey(getnotebind(6)) = 0 & chkkey(getnotebind(7)) = 0) | autoplay = 1) & bfduration() = 60 & (bfanimstate() != "danceLeft" & bfanimstate() != "danceRight")) : bfplayanim "danceRight"
+    if (((chkkey(getnotebind(4)) = 0 & chkkey(getnotebind(5)) = 0 & chkkey(getnotebind(6)) = 0 & chkkey(getnotebind(7)) = 0) | autoplay = 1) & bfduration() = 60 & bfanimstate() != "idle") : bfplayanim "idle"
+    if (dadduration() = 60 & (dadanimstate() != "danceLeft" & dadanimstate() != "danceRight")) : dadplayanim "danceRight"
+    if (dadduration() = 60 & dadanimstate() != "idle") : dadplayanim "idle"
+    
+    setcombo combo
+    hudupdate camx,camy
+    sethealth health
+    songpos = mcipos("inst")
+    
+    if (pretime > 0) {
+	    setcondpos songpos
+	    noteupdate songpos
+	    curtime = songpos
+	}
+	else {
+        if (mcivalid("voices") = 1) {
+	        if (abs(mcipos("voices") - songpos) > 10) : mciseek "voices",songpos
+	    }
+		
+		setcondpos pretime
+		noteupdate pretime
+		curtime = pretime
+		if (pause = 0) : pretime = pretime + getdeltatime()
+		if (pretime > 0) {			
+			mciplay "inst"
+			mciplay "voices"
+		}
+		else {
+			mcipause "inst"
+			mcipause "voices"
+		}
+	}
+
+    if (debugmode = 1) : debugupdate
+
+    if (abs(mcipos("inst") - mcilength("inst")) < 1) {
+	    await 500
+	    mainmenuinit
+		setscene 0
+	}
+
+	color 255,255,255
+    if (autoplay = 0) : drawtxt "Score: " + score + " | Misses: " + miss + " | Accuracy: " + strf("%.2f",accuracy()) + "%",280,320 : else : drawtxt "AUTOPLAY",280,320
+    drawtxt getsongname() + " - HS Funkin' v0.1.0",0,340
+
+    stick keys
+    if (pause = 1) {
+	    mcipause("inst")
+	    mcipause("voices")
+	    pauseupdate	    	    
+	}
+	else {
+		if (keys&32) {
+			pause = 1
+			playsound 0
+		}
+	}    
+    return
+
+#deffunc pauseupdate
+    color 0,0,0
+	boxf 225,100,415,260
+	color 255,255,255
+	font "",23
+	drawtxt "<PAUSE MENU>",225,100
+	if (pausemenusel = 0) : drawtxt ">RESUME",230,125 : else : drawtxt "-RESUME",230,125 
+	if (pausemenusel = 1) : drawtxt ">RESTART",230,150 : else : drawtxt "-RESTART",230,150  
+	if (pausemenusel = 2) : drawtxt ">BACK TO MENU",230,175 : else : drawtxt "-BACK TO MENU",230,175 
+	if (pausemenusel = 3) : drawtxt ">TGL AUTOPLAY",230,200 : else : drawtxt "-TGL AUTOPLAY",230,200
+    if (pausemenusel = 4) : drawtxt ">TGL DEBUG",230,225 : else : drawtxt "-TGL DEBUG",230,225 
+	if (keys&32) {
+		if (pausemenusel = 0) {
+			pause = 0
+			mciseek "voices",mcipos("inst")
+		    mciplay "inst"
+		    mciplay "voices"
+		}
+		if (pausemenusel = 1) {
+			playinit
+			playsong
+			pause = 0
+		}
+		if (pausemenusel = 2) {
+			mainmenuinit
+			setscene 0			
+		}
+		if (pausemenusel = 3) {
+			if (autoplay = 1) : autoplay = 0 : else : autoplay = 1
+		}
+		if (pausemenusel = 4) {
+			if (debugmode = 1) : debugmode = 0 : else : debugmode = 1
+		}
+	}
+
+    if (keys&8) : pausemenusel = clampint(pausemenusel + 1,0,4)
+	if (keys&2) : pausemenusel = clampint(pausemenusel - 1,0,4)	
+
+	if (keys&8) : playsound 0
+	if (keys&2) : playsound 0
+    return
+
+#deffunc debugupdate
+    color 0,0,0
+    boxf 450,120,635,280
+    color 255,255,255
+    sysfont 0
+    drawtxt "DEBUG MODE",450,120    
+    drawtxt "CAM_X: " + camx,450,135
+    drawtxt "CAM_Y: " + camy,450,150
+    drawtxt "SPRITE COUNT: " + drawcount(),450,165
+    drawtxt "BPM: " + condtempo(),450,180
+    drawtxt "BEAT: " + condbeat(),450,195
+    drawtxt "SECTION: " + condsection(),450,210
+    drawtxt "SONGPOS: " + curtime,450,225
+    return
+
+#defcfunc accuracy
+    if (totalscore <= 0.0) : return 0
+    return ((double(score) / double(totalscore)) * 100.0)
+
+#deffunc onmissed int num   
+    if (num = 4) : bfplayanim "singLEFTmiss"
+	if (num = 5) : bfplayanim "singDOWNmiss"
+	if (num = 6) : bfplayanim "singUPmiss"
+	if (num = 7) : bfplayanim "singRIGHTmiss"
+
+	if (num = 4) : playsound 1
+	if (num = 5) : playsound 2
+	if (num = 6) : playsound 3
+	if (num = 7) : playsound 1
+
+	if (combo > 0) : gfplayanim "sad"	
+
+	combo = 0
+    score = score - 100
+    miss = miss + 1
+    health = clampint(health - 5,0,100) 
+    if (health = 0) : gameoverinit
+    return
+
+#deffunc onnotehit array notedata
+    if (int(notedata(0)) > 3) : health = clampint(health + 1,0,100)
+    if (notedata(0) = "0") : dadplayanim "singLEFT"
+	if (notedata(0) = "1") : dadplayanim "singDOWN"
+	if (notedata(0) = "2") : dadplayanim "singUP"
+	if (notedata(0) = "3") : dadplayanim "singRIGHT"
+
+    if (notedata(0) = "4") : bfplayanim "singLEFT"
+	if (notedata(0) = "5") : bfplayanim "singDOWN"
+	if (notedata(0) = "6") : bfplayanim "singUP"
+	if (notedata(0) = "7") : bfplayanim "singRIGHT"
+
+	if (isaltanim() = 1) {
+		if (notedata(0) = "0") : dadplayanim "singLEFT-alt"
+	    if (notedata(0) = "1") : dadplayanim "singDOWN-alt"
+	    if (notedata(0) = "2") : dadplayanim "singUP-alt"
+	    if (notedata(0) = "3") : dadplayanim "singRIGHT-alt"
+
+        if (notedata(0) = "4") : bfplayanim "singLEFT-alt"
+	    if (notedata(0) = "5") : bfplayanim "singDOWN-alt"
+	    if (notedata(0) = "6") : bfplayanim "singUP-alt"
+	    if (notedata(0) = "7") : bfplayanim "singRIGHT-alt"
+	}
+
+	if ((notedata(0) = "4" & ismusthit() = 1) | (notedata(0) = "0" & ismusthit() = 0)) {
+		camoffsetx = -30
+		camoffsety = 0
+	}
+	if ((notedata(0) = "5" & ismusthit() = 1) | (notedata(0) = "1" & ismusthit() = 0)) {
+		camoffsetx = 0
+		camoffsety = 30
+	}
+	if ((notedata(0) = "6" & ismusthit() = 1) | (notedata(0) = "2" & ismusthit() = 0)) {
+		camoffsetx = 0
+		camoffsety = -30
+	}
+	if ((notedata(0) = "7" & ismusthit() = 1) | (notedata(0) = "3" & ismusthit() = 0)) {
+		camoffsetx = 30
+		camoffsety = 0
+	}
+	setconfirm notedata(0),2
+	if (int(notedata(0)) > 3) {
+		combo = combo + 1
+		totalscore = totalscore + 300
+		setcombo combo
+		msec = mcipos("inst") - int(notedata(1))
+		msecabs = abs(msec)
+		if (msecabs < 50) {
+			score = score + 300
+			setrating 0,msec
+			return
+		}
+		if (msecabs < 100) {
+			score = score + 150
+			setrating 1,msec
+			return
+		}
+		if (msecabs < 125) {
+			score = score + 50
+			setrating 2,msec
+			return
+		}
+		setrating 3,msec
+	}
+	return
+
+#deffunc onsustainhit array notedata
+    if (notedata(0) = "0") : dadplayanim "singLEFT"
+	if (notedata(0) = "1") : dadplayanim "singDOWN"
+	if (notedata(0) = "2") : dadplayanim "singUP"
+	if (notedata(0) = "3") : dadplayanim "singRIGHT"
+
+    if (notedata(0) = "4") : bfplayanim "singLEFT"
+	if (notedata(0) = "5") : bfplayanim "singDOWN"
+	if (notedata(0) = "6") : bfplayanim "singUP"
+	if (notedata(0) = "7") : bfplayanim "singRIGHT"
+
+	if (isaltanim() = 1) {
+		if (notedata(0) = "0") : dadplayanim "singLEFT-alt"
+	    if (notedata(0) = "1") : dadplayanim "singDOWN-alt"
+	    if (notedata(0) = "2") : dadplayanim "singUP-alt"
+	    if (notedata(0) = "3") : dadplayanim "singRIGHT-alt"
+
+        if (notedata(0) = "4") : bfplayanim "singLEFT-alt"
+	    if (notedata(0) = "5") : bfplayanim "singDOWN-alt"
+	    if (notedata(0) = "6") : bfplayanim "singUP-alt"
+	    if (notedata(0) = "7") : bfplayanim "singRIGHT-alt"
+	}
+
+    setconfirm notedata(0),2
+	
+	return
+
+#global

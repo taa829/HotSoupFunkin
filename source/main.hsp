@@ -1,0 +1,61 @@
+// HotSoupFunkin
+// by taaDeveloper 2025
+
+#include "utils.hsp"
+#include "sprite.hsp"
+#include "hud.hsp"
+#include "character.hsp"
+#include "bf.hsp"
+#include "gf.hsp"
+#include "dad.hsp"
+#include "sound.hsp"
+#include "multimedia.hsp"
+#include "conductor.hsp"
+#include "songdata.hsp"
+#include "note.hsp"
+#include "mainmenu.hsp"
+#include "play.hsp"
+#include "gameover.hsp"
+#include "deadbf.hsp"
+screen 0,640,360
+title "Friday Night Funkin'"
+fps = 60
+
+curscene = 0
+
+//buffer ID
+//[1] render buffer (don't touch!!)
+//[2] note
+//[3] bf
+//[4] dad
+//[5] gf
+//[6] stage
+//[7] ui asset
+
+timeinit
+soundinit
+
+*update
+	timeupdate
+	initdrawcount
+	redraw 0
+	color 0,0,0
+	boxf
+
+    if (curscene = 0) : mainmenuupdate
+	if (curscene = 1) : playupdate
+
+    sysfont 0
+	color 255,255,255
+	drawtxt "FPS: " + getfps(),0,0
+	await 1000/120
+	redraw 1
+	goto *update
+
+#deffunc setscene int num
+   curscene = num
+   return
+
+#defcfunc getfps
+   if (getdeltatime() = 0) : return 0
+   return 1000 / getdeltatime()

@@ -1,0 +1,216 @@
+// HSFunkin note module
+// by taaDeveloper 2025
+
+#module
+
+spawnednotes = 0
+
+scrolltime = 1
+
+autoplay = 0
+
+bindleft = 0
+binddown = 0
+bindup = 0
+bindright = 0
+
+flagkeyleft = 0
+flagkeyright = 0
+flagkeydown = 0
+flagkeyup = 0
+
+#deffunc noteinit
+    cachenotes
+    dim spawnednotes,getnotecnt()  
+    return
+
+#deffunc setnotebind int left,int down,int up,int right
+    bindleft = left
+    binddown = down
+    bindup = up
+    bindright = right
+    return
+
+#deffunc setautoplay int val
+    autoplay = val
+    return
+
+#deffunc setscrollspd double spd
+    scrolltime = 2000.0 / double(spd)
+    return
+
+#deffunc noteupdate double songpos
+    rep = 1
+    repeat getnotecnt() - 1
+        notedata = 0
+	    getnotedata getnoteat(rep),notedata	
+	    n_strumtime = double(notedata(1))
+	    n_sustain = double(notedata(2))
+	    n_line = int(notedata(0))
+	    if (songpos < (n_strumtime + n_sustain) & abs(songpos - n_strumtime) < (scrolltime + n_sustain)) {
+		    keyid = 0
+		    if (notedata(0) = "4") : keyid = bindleft
+	        if (notedata(0) = "5") : keyid = binddown
+	        if (notedata(0) = "6") : keyid = bindup
+	        if (notedata(0) = "7") : keyid = bindright
+	        if (songpos >= n_strumtime & (autoplay = 1 | n_line < 4 | chkkey(keyid) = 1)) {
+		        onsustainhit notedata
+		    }
+		    sustrep = 0
+            repeat clampint((int(notedata(2)) / 100) - 1,0,9999)
+                if ((songpos < n_strumtime + (double(sustrep) * 100.0)) | (autoplay = 0 & n_line > 3 & chkkey(keyid) = 0)) : drawlongnote n_line,n_strumtime + (double(sustrep) * 100.0),songpos
+                sustrep = sustrep + 1
+            loop
+            if ((songpos < n_strumtime + (double(sustrep) * 100.0)) | (autoplay = 0 & n_line > 3 & chkkey(keyid) = 0)) & sustrep > 0 : drawendnote n_line,n_strumtime + (double(sustrep) * 100.0),songpos
+		}	    
+        if (spawnednotes(rep) = 0) {	              
+	        if (abs(songpos - n_strumtime) < 150 & n_line > 3 & autoplay = 0) {
+		        keyid = 0
+		        if (notedata(0) = "4") : keyid = bindleft
+	            if (notedata(0) = "5") : keyid = binddown
+	            if (notedata(0) = "6") : keyid = bindup
+	            if (notedata(0) = "7") : keyid = bindright
+	            if (chkkey(keyid) = 1 & getnotekeyflags(n_line) <= 1 & isclosestnote(n_line,rep,n_strumtime,songpos) = 1) {
+		            spawnednotes(rep) = 1
+		            onnotehit notedata
+		            if (notedata(0) = "4") : flagkeyleft = 2
+	                if (notedata(0) = "5") : flagkeydown = 2
+	                if (notedata(0) = "6") : flagkeyup = 2
+	                if (notedata(0) = "7") : flagkeyright = 2
+		        }
+		    }		    
+	        if (songpos >= n_strumtime) {
+				if (n_line < 4 or autoplay = 1){
+			        spawnednotes(rep) = 1
+			        onnotehit notedata
+			    }
+		        if (n_line > 3 & abs(songpos - n_strumtime) > 150) {
+			        spawnednotes(rep) = 1
+			        onmissed n_line
+			    }
+		    }
+			if (abs(songpos - n_strumtime) < scrolltime & isspawnednote(rep) = 0) : drawnote n_line,n_strumtime,songpos
+        }
+	    rep = rep + 1
+    loop    
+    updatenotekeyflags       
+    return
+
+#deffunc updatenotekeyflags
+    if (chkkey(bindleft) = 1 & flagkeyleft < 2) : flagkeyleft = flagkeyleft + 1 : else : if (chkkey(bindleft) = 0) : flagkeyleft = 0
+    if (chkkey(binddown) = 1 & flagkeydown < 2) : flagkeydown = flagkeydown + 1 : else : if (chkkey(binddown) = 0) : flagkeydown = 0
+    if (chkkey(bindup) = 1 & flagkeyup < 2) : flagkeyup = flagkeyup + 1 : else : if (chkkey(bindup) = 0) : flagkeyup= 0
+    if (chkkey(bindright) = 1 & flagkeyright < 2) : flagkeyright = flagkeyright + 1 : else : if (chkkey(bindright) = 0) : flagkeyright = 0
+    return
+
+#defcfunc getnotekeyflags int id
+    if (id = 4) : return flagkeyleft
+    if (id = 5) : return flagkeydown
+    if (id = 6) : return flagkeyup
+    if (id = 7) : return flagkeyright
+    return 0
+
+#defcfunc getnotebind int id
+    if (id = 4) : return bindleft
+    if (id = 5) : return binddown
+    if (id = 6) : return bindup
+    if (id = 7) : return bindright
+    return 0
+
+#deffunc drawnote int strumline,double strumtime,double songpos
+    rate = ((double(songpos) + scrolltime) - double(strumtime)) / scrolltime
+    notex = 0
+    notey = lerp(500,25,double(rate))
+    if (notedata(0) = "0") : notex = 20
+	if (notedata(0) = "1") : notex = 84
+	if (notedata(0) = "2") : notex = 148
+	if (notedata(0) = "3") : notex = 212
+    
+    if (notedata(0) = "4") : notex = 340
+	if (notedata(0) = "5") : notex = 404
+	if (notedata(0) = "6") : notex = 468
+	if (notedata(0) = "7") : notex = 532
+	
+	if (notedata(0) = "0" or notedata(0) = "4") : drawimg 2,0,136,136,136,notex,notey,60,60
+	if (notedata(0) = "1" or notedata(0) = "5") : drawimg 2,136,136,136,136,notex,notey,60,60
+	if (notedata(0) = "2" or notedata(0) = "6") : drawimg 2,272,136,136,136,notex,notey,60,60
+	if (notedata(0) = "3" or notedata(0) = "7") : drawimg 2,408,136,136,136,notex,notey,60,60
+	
+    return
+
+#deffunc drawlongnote int strumline,double strumtime,double songpos
+    rate = ((double(songpos) + scrolltime) - double(strumtime)) / scrolltime
+    notex = 0
+    notey = lerp(500,25,double(rate))
+    if (notedata(0) = "0") : notex = 20
+	if (notedata(0) = "1") : notex = 84
+	if (notedata(0) = "2") : notex = 148
+	if (notedata(0) = "3") : notex = 212
+    
+    if (notedata(0) = "4") : notex = 340
+	if (notedata(0) = "5") : notex = 404
+	if (notedata(0) = "6") : notex = 468
+	if (notedata(0) = "7") : notex = 532
+
+	notex = notex + 20
+
+	noteh = (50.0 / (double(scrolltime) / 1000.0))
+	
+	if (notedata(0) = "0" or notedata(0) = "4") : drawimgwithpivot 2,0,704,64,48,notex,notey,25,noteh,1,1
+	if (notedata(0) = "1" or notedata(0) = "5") : drawimgwithpivot 2,56,704,64,48,notex,notey,25,noteh,1,1
+	if (notedata(0) = "2" or notedata(0) = "6") : drawimgwithpivot 2,112,704,64,48,notex,notey,25,noteh,1,1
+	if (notedata(0) = "3" or notedata(0) = "7") : drawimgwithpivot 2,168,704,64,48,notex,notey,25,noteh,1,1
+	
+    return
+
+#deffunc drawendnote int strumline,double strumtime,double songpos
+    rate = ((double(songpos) + scrolltime) - double(strumtime)) / scrolltime
+    notex = 0
+    notey = lerp(500,25,double(rate))
+    if (notedata(0) = "0") : notex = 20
+	if (notedata(0) = "1") : notex = 84
+	if (notedata(0) = "2") : notex = 148
+	if (notedata(0) = "3") : notex = 212
+    
+    if (notedata(0) = "4") : notex = 340
+	if (notedata(0) = "5") : notex = 404
+	if (notedata(0) = "6") : notex = 468
+	if (notedata(0) = "7") : notex = 532
+
+	notex = notex + 20
+	
+	if (notedata(0) = "0" or notedata(0) = "4") : drawimgwithpivot 2,0,704,64,98,notex,notey,25,30,1,1
+	if (notedata(0) = "1" or notedata(0) = "5") : drawimgwithpivot 2,56,704,64,98,notex,notey,25,30,1,1
+	if (notedata(0) = "2" or notedata(0) = "6") : drawimgwithpivot 2,112,704,64,98,notex,notey,25,30,1,1
+	if (notedata(0) = "3" or notedata(0) = "7") : drawimgwithpivot 2,168,704,64,98,notex,notey,25,30,1,1
+	
+    return
+
+#defcfunc isspawnednote int id
+    if (spawnednotes(id) = 0) : return 0
+    return 1
+
+#global
+
+#module
+
+#defcfunc isclosestnote int num,int index,double strumtime,double songpos
+    closest = 0
+    d = 999999
+    repeat getnotecnt() - 1 
+        if (abs((cnt + 1) - index) > 100) : continue
+        notedata = 0
+        getnotedata getnoteat(cnt + 1),notedata
+        if (abs(double(notedata(1)) - songpos) < d & int(notedata(0)) = num & isspawnednote(cnt + 1) = 0) {
+	        closest = double(notedata(1))
+	        d = abs(double(notedata(1)) - songpos)
+	    }
+    loop
+    if (closest = strumtime) {
+	    return 1
+	}
+	else {
+		return 0
+    }
+
+#global

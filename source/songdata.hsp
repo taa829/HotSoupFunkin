@@ -1,0 +1,111 @@
+// HSFunkin song parser module
+// by taaDeveloper 2025
+
+// section format
+// [must hit]|[alt anim]|[gf section]|[change bpm]|[section bpm]|[beat per section]|[note data...]
+// note format
+// [line 0~7],[strum time],[sustain length],[custom note type]
+
+#module
+
+sections = 0
+allnotes = 0
+
+songname = ""
+songbpm = 0
+
+musthit = 0
+altanim = 0
+gfsection = 0
+bpmchange = 0
+sectionbpm = 0
+sectionbeats = 4
+
+#deffunc loadsong str datapath
+    sdim sections
+    notesel buf
+    noteload datapath 
+    split buf,"\n",sections    
+    return
+
+#deffunc readsection int num
+    split sections(num + 1),"|",splited
+    musthit = int(splited(0))
+    altanim = int(splited(1))
+    gfsection = int(splited(2))
+    bpmchange = int(splited(3))
+    sectionbpm = double(splited(4))
+    sectionbeats = double(splited(5))
+    return
+
+#deffunc cachenotes
+    sdim allnotes
+    tmp = ""
+    id = 1
+    repeat length(sections) - 1
+        split sections(id),"|",splited
+        if (splited(6) != "") : tmp = tmp + splited(6)
+        id = id + 1
+    loop
+    split tmp,"#",allnotes
+    return
+
+#defcfunc getnoteat int num
+    return allnotes(num)
+
+#defcfunc getnotecnt
+    return length(allnotes)
+
+#deffunc getnotedata str data, array result
+    arg = data
+    split arg,",",splited
+    result = splited(0),splited(1),splited(2),splited(3)
+    return
+
+#defcfunc getsongbpm
+    split sections(0),"|",splited
+    return double(splited(1))
+
+#defcfunc getsongname
+    split sections(0),"|",splited
+    return splited(0)
+
+#defcfunc getp1char
+    split sections(0),"|",splited
+    return splited(2)
+
+#defcfunc getgfchar
+    split sections(0),"|",splited
+    return splited(3)
+
+#defcfunc getp2char
+    split sections(0),"|",splited
+    return splited(4)    
+
+#defcfunc getscrollspd
+    split sections(0),"|",splited
+    return double(splited(5))
+
+#defcfunc getstage
+    split sections(0),"|",splited
+    return splited(6)    
+
+#defcfunc ismusthit
+    return musthit
+
+#defcfunc isaltanim
+    return altanim
+
+#defcfunc isgfsection
+    return gfsection
+
+#defcfunc isbpmchange
+    return bpmchange
+
+#defcfunc getsectionbpm
+    return sectionbpm
+
+#defcfunc getsectionbeats
+    return sectionbeats
+
+#global

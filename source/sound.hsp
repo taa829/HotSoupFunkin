@@ -1,0 +1,31 @@
+#module
+
+#deffunc soundinit
+    mmload "assets/sounds/beep.wav",0
+    mmload "assets/sounds/missnote1.wav",1
+    mmload "assets/sounds/missnote2.wav",2
+    mmload "assets/sounds/missnote3.wav",3
+    mmload "assets/sounds/fnf_loss_sfx.wav",4
+    mmload "assets/sounds/gameover.wav",5,1
+    mmload "assets/sounds/gameoverend.wav",6
+    mmload "assets/sounds/intro3.wav",7
+    mmload "assets/sounds/intro2.wav",8
+    mmload "assets/sounds/intro1.wav",9
+    mmload "assets/sounds/introgo.wav",10
+    return
+
+#deffunc playsound int id
+    mmplay id
+    return
+
+#deffunc stopsound int id
+    mmstop id
+    return
+
+#deffunc stopallsound
+    repeat 6
+        mmstop cnt
+    loop
+    return
+
+#global

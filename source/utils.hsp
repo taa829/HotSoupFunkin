@@ -1,0 +1,96 @@
+// HSFunkin game-utils module
+// by taaDeveloper 2025
+
+#module
+
+prevtime = 0
+deltatime = 0
+
+#deffunc timeinit
+    prevtime = gettime(7)
+    return
+
+#deffunc timeupdate
+    deltatime = clamp(gettime(7) - prevtime,0,999)
+    prevtime = gettime(7)
+    return
+
+#defcfunc getdeltatime
+    return deltatime
+
+#deffunc drawtxt str txt,int posx,int posy
+    pos posx,posy
+    mes txt
+    pos 0,0
+    return
+
+#deffunc drawworldtxt str txt,int posx,int posy,int camx,int camy
+    pos posx - camx + 320,posy - camy + 180
+    mes txt
+    pos 0,0
+    return
+
+#defcfunc chkkey int id
+    getkey flag,id
+    return flag
+
+#deffunc arraycopy array p1, array p2
+    dim p2,length(p1)
+	foreach p1
+		p2(cnt) = p1(cnt)
+	loop
+	return
+
+#defcfunc lerp double a,double b,double t
+    return a + (b - a) * t
+
+#defcfunc clamp double val,double min,double max
+    if (val > max) : return max
+    if (val < min) : return min
+    return val
+
+#defcfunc clampint int val,int min,int max
+    if (val > max) : return max
+    if (val < min) : return min
+    return val
+
+#deffunc readflush int len
+   sdim splited,64,len
+   return
+
+#defcfunc readx str txt
+   arg = txt
+   split arg,",",splited
+   return int(splited(1))
+
+#defcfunc ready str txt
+   arg = txt
+   split arg,",",splited
+   return int(splited(2))
+
+#defcfunc readw str txt
+   arg = txt
+   split arg,",",splited
+   return int(splited(3))
+
+#defcfunc readh str txt
+   arg = txt
+   split arg,",",splited
+   return int(splited(4))
+
+#defcfunc readpivotx str txt
+   arg = txt
+   split arg,",",splited
+   return double(splited(5))  
+
+#defcfunc readpivoty str txt
+   arg = txt
+   split arg,",",splited
+   return double(splited(6)) 
+
+#defcfunc existfile str path
+   exist path
+   if (strsize = -1) : return 0
+   return 1
+
+#global

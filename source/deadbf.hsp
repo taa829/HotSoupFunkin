@@ -1,0 +1,96 @@
+#module
+deadbfcurframe = 0
+deadbfcuranim = 0
+deadbfatlas = 0
+deadbfelapsed = 0.0
+
+deadbfdur = 0
+deadbfstate = ""
+
+deadbfdata = ""
+
+deadbfanimx = 0
+deadbfanimy = 0
+
+deadbfflip = 0
+deadbfx = 0
+deadbfy = 0
+deadbfscale = 0
+deadbfcamx = 0
+deadbfcamy = 0
+
+deadbfvalid = 0
+
+#deffunc deadbfinit str atlaspath,str datapath,str imgpath
+    sdim deadbfdata,0
+    deadbfvalid = 0
+    if (existfile(datapath) = 0) {
+	    deadbfvalid = 0
+	    return
+	}
+	else {
+		deadbfvalid = 1
+	}
+    notesel buf
+    noteload atlaspath 
+    split buf,"\n",deadbfatlas       
+    loadchar imgpath,3
+    notesel deadbfdata
+    noteload datapath
+    deadbfstate = ""
+    deadbfx = readcharoffsetx(deadbfdata)
+    deadbfy = readcharoffsety(deadbfdata)
+    deadbfscale = readcharscale(deadbfdata)
+    deadbfcamx = readcharcamx(deadbfdata)
+    deadbfcamy = readcharcamy(deadbfdata)
+    deadbfflip = readcharflip(deadbfdata)
+    return
+
+#deffunc deadbfupdate int camx,int camy
+    if (deadbfvalid = 0) : return
+    if double(deadbfelapsed) > double(0.01) & deadbfcurframe < (length(deadbfcuranim) - 1) {
+	    deadbfcurframe = deadbfcurframe + 1
+	    deadbfelapsed = 0.0
+	}
+    readflush 8
+    x = readx(deadbfatlas(int(deadbfcuranim(deadbfcurframe))))
+    y = ready(deadbfatlas(int(deadbfcuranim(deadbfcurframe))))
+    w = readw(deadbfatlas(int(deadbfcuranim(deadbfcurframe))))
+    h = readh(deadbfatlas(int(deadbfcuranim(deadbfcurframe))))
+    pivx = readpivotx(deadbfatlas(int(deadbfcuranim(deadbfcurframe))))
+    pivy = readpivoty(deadbfatlas(int(deadbfcuranim(deadbfcurframe))))
+    if (deadbfflip = 0) : drawcharwithpivot 3,x,y,w,h,deadbfx + deadbfanimx,deadbfy + deadbfanimy,double(w) * double(deadbfscale),double(h) * double(deadbfscale),camx,camy,pivx,pivy : else : drawcharwithpivot 3,x,y,w,h,deadbfx + deadbfanimx,deadbfy + deadbfanimy,double(w) * double(deadbfscale * -1),double(h) * double(deadbfscale),camx,camy,pivx,pivy
+    deadbfelapsed = double(deadbfelapsed) + double(0.0025)
+    deadbfdur = clampint(deadbfdur + 1,0,60)
+    return
+
+#deffunc deadbfplayanim str anim    
+    if (deadbfstate != anim) {
+	    if (existcharanim(deadbfdata,anim) = 0) : return
+	    sdim deadbfcuranim,0
+	    readcharanim deadbfdata,anim,deadbfcuranim
+	    deadbfanimx = int(double(readcharanimationx(deadbfdata,anim)) * double(deadbfscale))
+	    deadbfanimy = int(double(readcharanimationy(deadbfdata,anim)) * double(deadbfscale))
+	    deadbfstate = anim
+	}
+	deadbfcurframe = 0
+	deadbfdur = 0
+    return
+
+#defcfunc deadbfplaying
+    if deadbfcurframe < (length(deadbfcuranim) - 1) : return 1
+    return 0
+
+#defcfunc deadbfduration
+    return deadbfdur
+
+#defcfunc deadbfanimstate
+    return deadbfstate
+
+#defcfunc deadbfcamerax
+    return deadbfcamx
+
+#defcfunc deadbfcameray
+    return deadbfcamy
+   
+#global

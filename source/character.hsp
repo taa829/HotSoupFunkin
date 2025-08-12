@@ -1,0 +1,103 @@
+#module
+
+#defcfunc readcharscale str data
+    buf = data
+    split buf,"\n",datalist
+    split datalist(0),"|",splited
+    return double(splited(2))
+
+#defcfunc readcharoffsetx str data
+    buf = data
+    split buf,"\n",datalist
+    split datalist(0),"|",splited
+    return int(splited(0))
+
+#defcfunc readcharoffsety str data
+    buf = data
+    split buf,"\n",datalist
+    split datalist(0),"|",splited
+    return int(splited(1))
+
+#defcfunc readcharcamx str data
+    buf = data
+    split buf,"\n",datalist
+    split datalist(0),"|",splited
+    return int(splited(3))
+
+#defcfunc readcharcamy str data
+    buf = data
+    split buf,"\n",datalist
+    split datalist(0),"|",splited
+    return int(splited(4))  
+
+#defcfunc readcharflip str data
+    buf = data
+    split buf,"\n",datalist
+    split datalist(0),"|",splited
+    return int(splited(5))
+
+#deffunc readcharanim str data,str anim,array dst
+    sdim dst
+    buf = data
+    sdim datalist,0
+    split buf,"\n",datalist    
+    repeat length(datalist)
+        if (cnt != 0) {
+	        sdim splited,0
+	        split datalist(cnt),"|",splited
+	        if (splited(0) = anim) { 
+		        split splited(1),",",dst		        
+		    }
+	    }
+    loop
+    return
+
+#defcfunc existcharanim str data,str name
+    result = 0
+    buf = data
+    sdim datalist,0
+    split buf,"\n",datalist    
+    repeat length(datalist)
+        if (cnt != 0) {	        
+	        sdim splited,0
+	        split datalist(cnt),"|",splited	        
+	        if (splited(0) = name) { 
+		        result = 1     
+		    }
+	    }
+    loop
+    return result
+
+#defcfunc readcharanimationx str data,str name
+    result = 0
+    buf = data
+    sdim datalist,0
+    split buf,"\n",datalist    
+    repeat length(datalist)
+        if (cnt != 0) {	        
+	        sdim splited,0
+	        split datalist(cnt),"|",splited	        
+	        if (splited(0) = name) { 
+		        result = int(splited(2))        
+		    }
+	    }
+    loop
+    return result
+
+#defcfunc readcharanimationy str data,str name
+    result = 0
+    buf = data
+    sdim datalist,0
+    split buf,"\n",datalist    
+    repeat length(datalist)
+        if (cnt != 0) {
+	        sdim splited,0
+	        split datalist(cnt),"|",splited
+	        if (splited(0) = name) {
+		        result = int(splited(3))		        
+		    }
+	    }
+    loop
+    return result    
+
+#global

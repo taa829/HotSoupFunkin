@@ -1,0 +1,65 @@
+// HSFunkin sprite module
+// by taaDeveloper 2025
+
+#module
+drawcnt = 0
+#deffunc initdrawcount
+    drawcnt = 0
+    return
+
+#defcfunc drawcount
+    return drawcnt
+
+#deffunc loadchar str imgpath,int bufid
+    if bufid=1:end
+    buffer bufid,128,128
+    cls 4
+    picload imgpath,2
+    gsel 0
+    return
+
+#deffunc drawimg int bufid,int x,int y,int w,int h,int px,int py,int sx,int sy
+    //buffer 1,640,480
+    //cls 4
+    //pos px,py
+    //gzoom sx,sy,bufid,x,y,w,h
+    //gsel 0
+    //gmode 2
+    //pos 0,0
+    //gcopy 1,0,0,640,360
+
+    gsel 0
+    gmode gmode_rgb0, w, h          
+    pos px + (sx / 2), py + (sy / 2)
+    grotate bufid, x, y, 0, sx, sy
+
+    drawcnt = drawcnt + 1
+    return
+
+#deffunc drawimgwithpivot int bufid,int x,int y,int w,int h,int px,int py,int sx,int sy,double pivx,double pivy
+    //buffer 1,640,480
+    //cls 4
+    //pos px,py
+    //gzoom sx,sy,bufid,x,y,w,h
+    //gsel 0
+    //gmode 2
+    //pos 0,0
+    //gcopy 1,0,0,640,360
+
+    gsel 0
+    gmode gmode_rgb0, w, h          
+    pos px + int((double(sx)) * (pivx - 0.5)), py + int((double(sy)) * (pivy - 0.5))
+    grotate bufid, x, y , 0, sx, sy
+
+    drawcnt = drawcnt + 1
+    return
+
+#deffunc drawchar int bufid,int x,int y,int w,int h,int px,int py,int sx,int sy,int camx,int camy
+    drawimg bufid,x,y,w,h,px - camx + 320,py - camy + 180,sx,sy
+return
+
+#deffunc drawcharwithpivot int bufid,int x,int y,int w,int h,int px,int py,int sx,int sy,int camx,int camy,double pivx,double pivy
+    drawimgwithpivot bufid,x,y,w,h,px - camx + 320,py - camy + 180,sx,sy,pivx,pivy
+return
+
+#global

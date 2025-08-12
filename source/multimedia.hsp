@@ -1,0 +1,41 @@
+// HSFunkin multimedia module
+// by taaDeveloper 2025
+
+#module
+
+#deffunc mciload str file,str alias
+    mci str("open " + file + " alias " + alias)
+    return
+
+#deffunc mciplay str alias
+    mci "play " + alias
+    return
+
+#deffunc mciclose str alias
+    mci "close " + alias
+    return
+
+#deffunc mcipause str alias
+    mci "pause " + alias
+    return
+
+#deffunc mciseek str alias,int msec
+    mci "seek " + alias + " to " + msec
+    return
+
+#defcfunc mcipos str alias
+    mci "status " + alias + " position"
+    ret = stat
+    return ret
+
+#defcfunc mcilength str alias
+    mci "status " + alias + " length"
+    ret = stat
+    return ret
+
+#defcfunc mcivalid str alias   
+    mci "status " + alias + " length"
+    if (stat = -1) : return 0
+    return 1
+
+#global

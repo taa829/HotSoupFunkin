@@ -1,0 +1,69 @@
+// HSFunkin conductor module
+// by taaDeveloper 2025
+
+#module
+
+condbpm = 0
+condpos = 0
+
+curbeat = 0.0
+cursection = 0
+
+#deffunc condinit
+    condbpm = 0
+    condpos = 0
+
+    curbeat = 0.0
+    cursection = 0.0
+    return
+
+#deffunc setcondbpm double bpm
+    condbpm = double(bpm)
+    return
+
+#deffunc setcondpos int songpos
+    deltapos = double(songpos - condpos)
+    condpos += deltapos
+    prevbeat = int(curbeat)
+    prevsection = int(cursection)
+    curbeat = double(curbeat) + (double(condbpm) / 60.0) * (double(deltapos) / 1000.0)
+    cursection = double(cursection) + (double(condbpm) / (60.0 * double(getsectionbeats()))) * (double(deltapos) / 1000.0)
+    if (prevbeat < int(curbeat)) {	
+	    sethealthiconscale 1.0
+	    if (int(curbeat) = -4) : playsound 7
+	    if (int(curbeat) = -3) : playsound 8
+	    if (int(curbeat) = -2) : playsound 9
+	    if (int(curbeat) = -1) : playsound 10
+	    if (int(curbeat) \ 2)= 0 {
+		    gfplayanim "danceLeft"
+		    if ((bfanimstate() = "danceLeft" | bfanimstate() = "danceRight")) : bfplayanim "danceLeft"
+		    if ((dadanimstate() = "danceLeft" | dadanimstate() = "danceRight")) : dadplayanim "danceLeft"
+		    if (bfanimstate() = "idle" & bfplaying() = 0) : bfplayanim "idle"
+		    if (dadanimstate() = "idle" & dadplaying() = 0) : dadplayanim "idle"
+		    if (gfanimstate() = "idle" & gfplaying() = 0) : gfplayanim "idle"		    
+		}
+		else {
+			gfplayanim "danceRight"
+			if ((bfanimstate() = "danceLeft" | bfanimstate() = "danceRight")) : bfplayanim "danceRight"
+		    if ((dadanimstate() = "danceLeft" | dadanimstate() = "danceRight")) : dadplayanim "danceRight"
+		}
+	}
+	if (prevsection < int(cursection)){
+		if (int(cursection) > -1) : readsection int(cursection)
+		if (isbpmchange() = 1) : setcondbpm getsectionbpm()
+	}
+    return
+
+#defcfunc condbeat
+    return curbeat
+
+#defcfunc condposition
+    return condpos
+
+#defcfunc condsection
+    return cursection
+
+#defcfunc condtempo
+    return condbpm
+
+#global
